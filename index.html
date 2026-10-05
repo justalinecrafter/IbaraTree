@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="時間割">
+  <title>時間割</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+</head>
+<body data-current-view="timetable">
+  <div id="app">
+    <header class="app-header">
+      <div class="header-main">
+        <div>
+          <h1 id="page-title">時間割</h1>
+          <p id="week-range" class="week-range"></p>
+        </div>
+        <div class="header-actions">
+          <button id="prev-week" class="icon-button" aria-label="前の週">‹</button>
+          <button id="today-button" class="text-button">今日</button>
+          <button id="next-week" class="icon-button" aria-label="次の週">›</button>
+          <button id="timetable-mode-toggle" class="text-button">教科別</button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section id="view-timetable" class="view active-view" aria-label="時間割"></section>
+      <section id="view-todo" class="view" aria-label="ToDo">
+        <div class="section-heading todo-section-heading">
+          <div>
+            <h2>ToDo</h2>
+            <p>期限の近い順に表示されます。</p>
+          </div>
+          <button id="todo-add-button" class="primary-button">＋ ToDoを追加</button>
+        </div>
+        <div id="todo-list" class="todo-list-panel"></div>
+      </section>
+      <section id="view-input" class="view" aria-label="予定入力">
+        <div class="section-heading">
+          <div>
+            <h2>予定入力</h2>
+            <p>手入力かJSON一括入力でデータを登録します</p>
+          </div>
+        </div>
+        <div class="segmented" role="tablist" aria-label="入力方法">
+          <button class="segmented-button active" data-input-tab="manual">手入力</button>
+          <button class="segmented-button" data-input-tab="json">JSON入力</button>
+        </div>
+        <div id="input-tab-manual" class="input-tab active-input-tab">
+          <div class="sub-segmented" role="tablist" aria-label="手入力の種類">
+            <button class="sub-tab active" data-manual-tab="calendar">年間予定</button>
+            <button class="sub-tab" data-manual-tab="schedule">通常時間割</button>
+            <button class="sub-tab" data-manual-tab="exam">考査</button>
+            <button class="sub-tab" data-manual-tab="override">時間割変更</button>
+          </div>
+          <div id="manual-calendar" class="manual-panel active-panel"></div>
+          <div id="manual-schedule" class="manual-panel"></div>
+          <div id="manual-exam" class="manual-panel"></div>
+          <div id="manual-override" class="manual-panel"></div>
+        </div>
+        <div id="input-tab-json" class="input-tab">
+          <div class="sub-segmented json-segmented" role="tablist" aria-label="JSONの種類">
+            <button class="sub-tab active" data-json-tab="calendar">年間予定</button>
+            <button class="sub-tab" data-json-tab="schedule">通常時間割</button>
+            <button class="sub-tab" data-json-tab="exam">考査</button>
+            <button class="sub-tab" data-json-tab="override">時間割変更</button>
+            <button class="sub-tab" data-json-tab="all">全体</button>
+          </div>
+          <div class="card">
+            <h3 id="json-editor-title">年間予定のJSON</h3>
+            <p id="json-editor-help" class="muted">localStorage の calendar 部分だけを編集します。JSONを読み込むと、この部分だけが更新されます。</p>
+            <textarea id="json-input" class="code-input json-editor" spellcheck="false"></textarea>
+            <div class="button-row">
+              <button id="json-replace" class="secondary-button">読み込む（置換）</button>
+              <button id="json-merge" class="primary-button">読み込む（追加・更新）</button>
+            </div>
+            <div id="json-status" class="status-box" aria-live="polite"></div>
+          </div>
+          <div class="card">
+            <h3>共有用JSON</h3>
+            <p class="muted">全文だけでなく、必要な範囲・学期・パターンなどを指定して表示できます。表示中のJSONがそのままコピーされます。</p>
+            <div id="json-share-controls" class="json-share-controls"></div>
+            <textarea id="json-share-output" class="code-input json-share-output" spellcheck="false" readonly></textarea>
+            <div class="button-row">
+              <button id="json-refresh-share" class="secondary-button">現在のデータを表示</button>
+              <button id="json-copy-share" class="primary-button">JSONをコピー</button>
+            </div>
+          </div>
+          <details class="card prompt-card">
+            <summary>AI用JSON生成プロンプトの例</summary>
+            <div class="prompt-actions"><button id="copy-prompt" class="secondary-button small-button">プロンプトをコピー</button></div>
+            <pre id="ai-prompt" class="prompt-block"></pre>
+          </details>
+          <details class="card schema-card">
+            <summary>JSONの説明</summary>
+            <pre id="schema-example" class="prompt-block"></pre>
+          </details>
+        </div>
+      </section>
+      <section id="view-settings" class="view" aria-label="設定">
+        <div class="section-heading">
+          <div><h2>設定</h2><p>時間割とアプリの表示を設定します</p></div>
+        </div>
+
+        <details class="settings-group card">
+          <summary>時間割設定</summary>
+          <div class="settings-group-content">
+            <details class="card collapsible-card"><summary>前期・後期</summary><div class="collapsible-content"><div class="form-row inline-row"><label for="term-change-month">後期開始月</label><select id="term-change-month"></select></div><button id="save-term-settings" class="primary-button">保存</button></div></details>
+            <details class="card collapsible-card"><summary>教科の色</summary><div class="collapsible-content"><div class="card-title-row"><div><p class="muted">時間割上の教科ごとの色を決めます。</p></div><button id="add-subject-color" class="secondary-button small-button">教科を追加</button></div><div id="subject-colors-list" class="settings-list"></div><button id="save-subject-colors" class="primary-button">色設定を保存</button></div></details>
+            <details class="card collapsible-card"><summary>教科の名前</summary><div class="collapsible-content"><div class="card-title-row"><div><p class="muted">それぞれの教科の表示名をここで設定できます。</p></div><button id="add-subject-name" class="secondary-button small-button">教科を追加</button></div><div id="subject-names-list" class="settings-list"></div><button id="save-subject-names" class="primary-button">教科名を保存</button></div></details>
+          </div>
+        </details>
+
+        <details class="settings-group card">
+          <summary>アプリの設定</summary>
+          <div class="settings-group-content">
+            <details class="card collapsible-card"><summary>曜日の色</summary><div class="collapsible-content"><p class="muted">曜日ごとに日付ヘッダーの背景色を設定します。</p><div id="weekday-colors-list" class="weekday-colors-list"></div><button id="save-weekday-colors" class="primary-button">曜日の色を保存</button></div></details>
+            <details class="card collapsible-card"><summary>祝日</summary><div class="collapsible-content"><p class="muted">祝日の日付ヘッダーの表示色を変更できます。</p><div class="form-row inline-row"><label for="holiday-color">祝日の背景色</label><input id="holiday-color" type="color" value="#ffdfe3"></div><button id="save-holiday-color" class="primary-button">祝日の色を保存</button></div></details>
+          </div>
+        </details>
+
+        <details class="settings-group card">
+          <summary>データの管理</summary>
+          <div class="settings-group-content">
+            <details class="card collapsible-card"><summary>バックアップ出力</summary><div class="collapsible-content"><p class="muted">設定を含むアプリ全体のデータをJSON形式で確認できます。ダウンロードまたはコピーして、バックアップやデバイスの引き継ぎに使用できます。</p><textarea id="backup-json-output" class="code-input json-backup-output" spellcheck="false" readonly></textarea><div class="button-row"><button id="export-data" class="secondary-button">JSONをダウンロード</button><button id="copy-backup-data" class="primary-button">JSONをコピー</button></div></div></details>
+            <details class="card collapsible-card"><summary>バックアップ読み込み</summary><div class="collapsible-content"><p class="muted">「バックアップ出力」で保存・コピーした、アプリ全体のJSONを読み込みます。読み込みは全文置換のみで、現在のデータ・設定はバックアップの内容に置き換わります。</p><textarea id="backup-json-input" class="code-input json-backup-input" spellcheck="false" placeholder='{"version":6,"settings":{},"schedules":{},"calendar":[],"examData":{},"overrides":{}}'></textarea><div class="button-row"><button id="import-backup-data" class="primary-button">バックアップを読み込む</button></div><div id="backup-import-status" class="status-box" aria-live="polite"></div></div></details>
+            <details class="card collapsible-card"><summary>過去データの削除</summary><div class="collapsible-content"><p class="muted">その日から指定した期間より前の「年間予定・考査・時間割変更」を削除します。週間時間割は削除されません。自動では削除されません。</p><div class="form-field"><label for="data-retention-period">削除する期間</label><select id="data-retention-period">
+              <option value="1month">1カ月より前</option>
+              <option value="3months">3カ月より前</option>
+              <option value="6months">6カ月より前</option>
+              <option value="1year" selected>1年より前</option>
+              <option value="2years">2年より前</option>
+              <option value="custom">日付を指定</option>
+            </select></div><div id="data-delete-before-wrap" class="form-field data-delete-before-wrap" hidden><label for="data-delete-before">この日より前を削除</label><input id="data-delete-before" type="date"></div><p id="data-delete-before-info" class="muted data-delete-before-info"></p><button id="delete-old-data" class="danger-button">過去データを削除</button></div></details>
+            <details class="card danger-card collapsible-card"><summary>データの初期化</summary><div class="collapsible-content"><p class="muted">時間割・年間予定・考査・変更・設定をすべて初期化します。元に戻せません。</p><button id="reset-data" class="danger-button">すべて初期化</button></div></details>
+          </div>
+        </details>
+      </section>
+    </main>
+    <nav class="bottom-nav" aria-label="メニュー">
+      <button class="nav-item active" data-view="timetable"><span class="nav-icon">▦</span><span>時間割</span></button>
+      <button class="nav-item" data-view="todo"><span class="nav-icon">✓</span><span>ToDo</span></button>
+      <button class="nav-item" data-view="input"><span class="nav-icon">＋</span><span>予定入力</span></button>
+      <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>設定</span></button>
+    </nav>
+  </div>
+  <div id="lesson-modal" class="modal-overlay hidden" role="presentation"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button id="modal-close" class="modal-close" aria-label="閉じる">×</button><div id="modal-content"></div></div></div>
+  <script src="script.js"></script>
+</body>
+</html>
