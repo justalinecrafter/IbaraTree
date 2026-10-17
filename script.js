@@ -738,7 +738,7 @@ function normalizeData(data) {
   for (const key of SETTINGS_KEYS) if (key in sourceSettings) picked.settings[key] = sourceSettings[key];
   for (const key of DATA_KEYS) if (key in source) picked[key] = source[key];
   const merged = deepMerge(base, picked);
-  merged.version = 6;
+  merged.version = 1;
   merged.settings.termChangeMonth = clamp(Number(merged.settings.termChangeMonth) || 10, FIRST_TERM_START_MONTH, 12);
   merged.settings.subjectColors = isPlainObject(merged.settings.subjectColors) ? merged.settings.subjectColors : {};
   // 色の値は HTML 属性や style に使うため、#RRGGBB 形式以外は既定色に置き換える。
