@@ -262,7 +262,7 @@ settings などのアプリ設定は含みません。`
 
 function emptyData() {
   return {
-    version: 6,
+    version: 1,
     settings: {
       termChangeMonth: 10,
       subjectColors: {},
