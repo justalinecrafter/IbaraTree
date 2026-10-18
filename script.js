@@ -1641,6 +1641,7 @@ function renderOverrideList(){const el=document.getElementById("override-list");
 
 
 function renderSettings(){
+  document.getElementById("app-version").textContent=`version ${appData.version}`;
   const month=document.getElementById("term-change-month");
   // 後期開始月は4月（前期開始月）から選べる。
   month.innerHTML=Array.from({length:12-FIRST_TERM_START_MONTH+1},(_,i)=>{
